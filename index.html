@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JS Code Editor with Custom Keyboard - Ace Editor</title>
+    
+    <!-- Ace Editor CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Ace Editor Container */
+        #editor {
+            flex: 1;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        /* Keyboard Container */
+        #keyboard {
+            background: #2d2d30;
+            padding: 8px 4px;
+            border-top: 2px solid #007acc;
+            user-select: none;
+            -webkit-user-select: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Keyboard hidden state */
+        #keyboard.hidden {
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        #keyboard.visible {
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        /* Keyboard Rows */
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 4px;
+            gap: 3px;
+        }
+
+        /* Base Key Style */
+        .key {
+            background: #3e3e42;
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #cccccc;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 28px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s;
+            flex: 1;
+            max-width: 40px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Key press animation */
+        .key.pressed {
+            transform: scale(0.9);
+            opacity: 0.8;
+        }
+
+        /* Key hover/active states */
+        .key:hover {
+            background: #4e4e52;
+        }
+
+        .key:active {
+            background: #094771;
+        }
+
+        /* Coding keys (top row) */
+        .key.coding {
+            background: #094771;
+            border-color: #1177bb;
+            color: #4fc3f7;
+            font-weight: 600;
+            min-width: 50px;
+            max-width: 70px;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .key.coding:hover {
+            background: #0a5a8e;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .key.coding:active {
+            background: #1177bb;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Special keys */
+        .key.special {
+            background: #4b4b4f;
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .key.space {
+            flex: 4;
+            max-width: 200px;
+        }
+
+        .key.shift, .key.delete {
+            flex: 1.5;
+            max-width: 60px;
+        }
+
+        .key.shift.active {
+            background: #1177bb;
+            color: white;
+        }
+
+        .key.return {
+            background: #0e639c;
+            color: white;
+            flex: 1.5;
+            max-width: 70px;
+        }
+
+        .key.tab {
+            flex: 1.5;
+            max-width: 60px;
+        }
+
+        .key.symbols-toggle {
+            background: #5a5a5f;
+            min-width: 40px;
+        }
+
+        .key.symbols-toggle.active {
+            background: #1177bb;
+        }
+
+        /* Bracket pair keys */
+        .key[data-pair] {
+            font-size: 18px;
+            letter-spacing: 2px;
+            padding: 8px 6px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 500px) {
+            .key {
+                padding: 6px 8px;
+                font-size: 14px;
+                height: 38px;
+                min-width: 24px;
+            }
+            
+            .key.coding {
+                font-size: 12px;
+                min-width: 44px;
+            }
+            
+            .key[data-pair] {
+                font-size: 16px;
+                letter-spacing: 1px;
+                padding: 6px 4px;
+            }
+        }
+
+        /* Keyboard toggle button */
+        #keyboard-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #keyboard-toggle:hover {
+            background: #005a9e;
+            transform: scale(1.1);
+        }
+
+        #keyboard-toggle.keyboard-visible {
+            bottom: 280px;
+        }
+
+        /* Editor info bar */
+        #info-bar {
+            background: gainsboro;
+            color: white;
+            padding: 8px 16px;
+            margin-bottom: 3px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .cursor-info {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+        }
+
+        /* Run button */
+        #run-button {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #21b682;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        #run-button:hover {
+            background: #1a9f6f;
+        }
+
+        #run-button:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        /* Console panel */
+        #console-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #1e1e1e;
+            border-top: 2px solid #007acc;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 998;
+        }
+
+        #console-panel.open {
+            transform: translateY(0);
+        }
+
+        #console-header {
+            background: #2d2d30;
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #console-output {
+            height: calc(100% - 40px);
+            padding: 12px;
+            overflow-y: auto;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .console-entry {
+            margin-bottom: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .console-entry.log { color: #d4d4d4; }
+        .console-entry.error { color: #f48771; }
+        .console-entry.warn { color: #cca700; }
+        .console-entry.info { color: #4fc3f7; }
+        .console-entry.result { color: #b5cea8; }
+
+        .console-prompt {
+            color: #608b4e;
+            margin-right: 8px;
+        }
+
+        /* Console toggle button - removed */
+
+        /* Adjust keyboard position when console is open */
+        #keyboard.with-console {
+            bottom: 200px;
+        }
+
+        /* Adjust editor padding */
+        #editor.with-keyboard {
+            padding-bottom: 280px;
+        }
+
+        #editor.with-keyboard.with-console {
+            padding-bottom: 480px;
+        }
+
+        /* Prevent scrolling when keyboard is open on mobile */
+        body.keyboard-open {
+            position: fixed;
+            width: 100%;
+        }
+
+        /* Smooth transitions */
+        * {
+            -webkit-transition: background-color 0.1s ease;
+            transition: background-color 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="info-bar">
+        <span class="cursor-info" id="cursor-info">Ln 1, Col 1</span>
+        <button id="run-button">▶ Run</button>
+    </div>
+    
+    <div id="editor"></div>
+    
+    <button id="keyboard-toggle">⌨️</button>
+    
+    <div id="console-panel">
+        <div id="console-header">
+            <span>Console Output</span>
+            <div style="display: flex; gap: 12px;">
+                <button id="clear-console" style="background: none; border: none; color: #ccc; cursor: pointer;">Clear</button>
+                <button id="close-console" style="background: none; border: none; color: #ccc; cursor: pointer; font-size: 18px;">×</button>
+            </div>
+        </div>
+        <div id="console-output"></div>
+    </div>
+    
+    <div id="keyboard" class="visible">
+        <!-- Coding shortcuts row -->
+        <div class="keyboard-row">
+            <div class="key coding" data-template="func">func</div>
+            <div class="key coding" data-template="loop">for</div>
+            <div class="key coding" data-template="if">if</div>
+            <div class="key coding" data-template="arrow">=&gt;</div>
+            <div class="key coding" data-template="log">log</div>
+            <div class="key coding" data-template="const">const</div>
+            <div class="key coding" data-template="let">let</div>
+            <div class="key coding" data-template="try">try</div>
+        </div>
+
+        <!-- Numbers row -->
+        <div class="keyboard-row">
+            <div class="key" data-key="1">1</div>
+            <div class="key" data-key="2">2</div>
+            <div class="key" data-key="3">3</div>
+            <div class="key" data-key="4">4</div>
+            <div class="key" data-key="5">5</div>
+            <div class="key" data-key="6">6</div>
+            <div class="key" data-key="7">7</div>
+            <div class="key" data-key="8">8</div>
+            <div class="key" data-key="9">9</div>
+            <div class="key" data-key="0">0</div>
+        </div>
+
+        <!-- QWERTY rows -->
+        <div class="keyboard-row">
+            <div class="key" data-key="q">q</div>
+            <div class="key" data-key="w">w</div>
+            <div class="key" data-key="e">e</div>
+            <div class="key" data-key="r">r</div>
+            <div class="key" data-key="t">t</div>
+            <div class="key" data-key="y">y</div>
+            <div class="key" data-key="u">u</div>
+            <div class="key" data-key="i">i</div>
+            <div class="key" data-key="o">o</div>
+            <div class="key" data-key="p">p</div>
+        </div>
+
+        <div class="keyboard-row">
+            <div class="key" data-key="a">a</div>
+            <div class="key" data-key="s">s</div>
+            <div class="key" data-key="d">d</div>
+            <div class="key" data-key="f">f</div>
+            <div class="key" data-key="g">g</div>
+            <div class="key" data-key="h">h</div>
+            <div class="key" data-key="j">j</div>
+            <div class="key" data-key="k">k</div>
+            <div class="key" data-key="l">l</div>
+            <div class="key" data-key=";">;</div>
+        </div>
+
+        <div class="keyboard-row">
+            <div class="key special shift" id="shift-key">⇧</div>
+            <div class="key" data-key="z">z</div>
+            <div class="key" data-key="x">x</div>
+            <div class="key" data-key="c">c</div>
+            <div class="key" data-key="v">v</div>
+            <div class="key" data-key="b">b</div>
+            <div class="key" data-key="n">n</div>
+            <div class="key" data-key="m">m</div>
+            <div class="key special delete" id="delete-key">⌫</div>
+        </div>
+
+        <!-- Bottom row -->
+        <div class="keyboard-row">
+            <div class="key special symbols-toggle" id="symbols-toggle">{}</div>
+            <div class="key" data-key=",">,</div>
+            <div class="key special space" data-key=" ">space</div>
+            <div class="key" data-key=".">.</div>
+            <div class="key special return" id="return-key">↵</div>
+        </div>
+
+        <!-- Symbols rows (initially hidden) -->
+        <div id="symbols-section" style="display: none;">
+            <div class="keyboard-row">
+                <div class="key" data-pair="()">()</div>
+                <div class="key" data-pair="[]">[]</div>
+                <div class="key" data-pair="{}">{}</div>
+                <div class="key" data-pair="<>">&lt;&gt;</div>
+                <div class="key" data-pair='""'>""</div>
+                <div class="key" data-pair="''">''</div>
+                <div class="key" data-pair="``">``</div>
+            </div>
+            <div class="keyboard-row">
+                <div class="key" data-key="!">!</div>
+                <div class="key" data-key="@">@</div>
+                <div class="key" data-key="#">#</div>
+                <div class="key" data-key="$">$</div>
+                <div class="key" data-key="%">%</div>
+                <div class="key" data-key="&">&amp;</div>
+                <div class="key" data-key="*">*</div>
+                <div class="key" data-key="=">=</div>
+                <div class="key" data-key="+">+</div>
+                <div class="key" data-key="-">-</div>
+                <div class="key" data-key="/">/</div>
+                <div class="key" data-key="|">|</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Ace Editor
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/cobalt");
+        editor.session.setMode("ace/mode/javascript");
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true,
+            fontSize: "14px",
+            showPrintMargin: false,
+            tabSize: 4,
+            useSoftTabs: true
+        });
+
+        // Code templates
+        const templates = {
+            func: {
+                text: "function name(params) {\n    \n}",
+                cursor: { row: 1, column: 4 }
+            },
+            loop: {
+                text: "for (let i = 0; i < length; i++) {\n    \n}",
+                cursor: { row: 1, column: 4 }
+            },
+            if: {
+                text: "if (condition) {\n    \n}",
+                cursor: { row: 1, column: 4 }
+            },
+            arrow: {
+                text: "(params) => {\n    \n}",
+                cursor: { row: 1, column: 4 }
+            },
+            log: {
+                text: "console.log()",
+                cursor: { row: 0, column: 12 }
+            },
+            const: {
+                text: "const name = ",
+                cursor: { row: 0, column: 13 }
+            },
+            let: {
+                text: "let name = ",
+                cursor: { row: 0, column: 11 }
+            },
+            try: {
+                text: "try {\n    \n} catch (error) {\n    \n}",
+                cursor: { row: 1, column: 4 }
+            }
+        };
+
+        // UI Elements
+        const keyboard = document.getElementById('keyboard');
+        const keyboardToggle = document.getElementById('keyboard-toggle');
+        const cursorInfo = document.getElementById('cursor-info');
+        const symbolsToggle = document.getElementById('symbols-toggle');
+        const symbolsSection = document.getElementById('symbols-section');
+        const runButton = document.getElementById('run-button');
+        const consolePanel = document.getElementById('console-panel');
+        const consoleOutput = document.getElementById('console-output');
+        const clearConsole = document.getElementById('clear-console');
+        const closeConsole = document.getElementById('close-console');
+        
+        let shiftPressed = false;
+        let symbolsMode = false;
+        let consoleOpen = false;
+
+        // Console functionality
+        function addConsoleEntry(type, ...args) {
+            const entry = document.createElement('div');
+            entry.className = `console-entry ${type}`;
+            
+            const prompt = document.createElement('span');
+            prompt.className = 'console-prompt';
+            prompt.textContent = '>';
+            entry.appendChild(prompt);
+            
+            // Format the output
+            const output = args.map(arg => {
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+            
+            entry.appendChild(document.createTextNode(output));
+            consoleOutput.appendChild(entry);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Create custom console object
+        function createCustomConsole() {
+            return {
+                log: (...args) => addConsoleEntry('log', ...args),
+                error: (...args) => addConsoleEntry('error', ...args),
+                warn: (...args) => addConsoleEntry('warn', ...args),
+                info: (...args) => addConsoleEntry('info', ...args)
+            };
+        }
+
+        // Run code function
+        function runCode() {
+            // Clear previous output
+            consoleOutput.innerHTML = '';
+            
+            // Show console if hidden
+            if (!consoleOpen) {
+                toggleConsole();
+            }
+            
+            const code = editor.getValue();
+            const customConsole = createCustomConsole();
+            
+            try {
+                // Create a function with the custom console in scope
+                const func = new Function('console', code);
+                
+                // Run the code with our custom console
+                const result = func(customConsole);
+                
+                // If the code returns a value, display it
+                if (result !== undefined) {
+                    addConsoleEntry('result', 'Return value:', result);
+                }
+            } catch (error) {
+                addConsoleEntry('error', error.toString());
+                if (error.stack) {
+                    addConsoleEntry('error', 'Stack trace:', error.stack);
+                }
+            }
+        }
+
+        // Run button click
+        runButton.addEventListener('click', runCode);
+
+        // Keyboard shortcut for run (Ctrl/Cmd + Enter)
+        editor.commands.addCommand({
+            name: 'runCode',
+            bindKey: {win: 'Ctrl-Enter', mac: 'Command-Enter'},
+            exec: runCode
+        });
+
+        // Console toggle
+        function toggleConsole() {
+            consoleOpen = !consoleOpen;
+            consolePanel.classList.toggle('open');
+            keyboard.classList.toggle('with-console');
+            editor.container.classList.toggle('with-console');
+            
+            // Adjust keyboard position
+            if (keyboard.classList.contains('visible')) {
+                editor.resize();
+            }
+        }
+
+        // Close console
+        closeConsole.addEventListener('click', () => {
+            if (consoleOpen) {
+                toggleConsole();
+            }
+        });
+
+        // Clear console
+        clearConsole.addEventListener('click', (e) => {
+            e.stopPropagation();
+            consoleOutput.innerHTML = '';
+        });
+
+        // Update cursor position display
+        editor.on('changeSelection', () => {
+            const cursor = editor.getCursorPosition();
+            cursorInfo.textContent = `Ln ${cursor.row + 1}, Col ${cursor.column + 1}`;
+        });
+
+        // Handle keyboard toggle
+        keyboardToggle.addEventListener('click', () => {
+            keyboard.classList.toggle('hidden');
+            keyboard.classList.toggle('visible');
+            keyboardToggle.classList.toggle('keyboard-visible');
+            document.body.classList.toggle('keyboard-open');
+            
+            // Adjust editor height
+            if (keyboard.classList.contains('visible')) {
+                editor.container.style.paddingBottom = '280px';
+            } else {
+                editor.container.style.paddingBottom = '0';
+            }
+            editor.resize();
+        });
+
+        // Handle key presses with visual feedback
+        function handleKeyPress(key) {
+            key.classList.add('pressed');
+            setTimeout(() => key.classList.remove('pressed'), 100);
+        }
+
+        // Regular keys
+        document.querySelectorAll('.key[data-key]').forEach(key => {
+            key.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleKeyPress(key);
+                
+                const char = key.getAttribute('data-key');
+                if (char) {
+                    editor.insert(shiftPressed && char.match(/[a-z]/) ? char.toUpperCase() : char);
+                    
+                    // Auto-disable shift after typing
+                    if (shiftPressed && char !== ' ') {
+                        shiftPressed = false;
+                        document.getElementById('shift-key').classList.remove('active');
+                        updateKeyLabels();
+                    }
+                }
+                editor.focus();
+            });
+        });
+
+        // Bracket pair keys
+        document.querySelectorAll('.key[data-pair]').forEach(key => {
+            key.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleKeyPress(key);
+                
+                const pair = key.getAttribute('data-pair');
+                if (pair && pair.length === 2) {
+                    editor.insert(pair);
+                    // Move cursor between the brackets
+                    editor.navigateLeft();
+                }
+                editor.focus();
+            });
+        });
+
+        // Template keys
+        document.querySelectorAll('.key[data-template]').forEach(key => {
+            key.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleKeyPress(key);
+                
+                const templateName = key.getAttribute('data-template');
+                const template = templates[templateName];
+                
+                if (template) {
+                    const cursor = editor.getCursorPosition();
+                    const session = editor.session;
+                    
+                    // Get current line for indentation
+                    const currentLine = session.getLine(cursor.row);
+                    const indent = currentLine.match(/^\s*/)[0];
+                    
+                    // Add indentation to each line of the template
+                    const indentedTemplate = template.text.split('\n').map((line, index) => {
+                        return index === 0 ? line : indent + line;
+                    }).join('\n');
+                    
+                    // Insert template text
+                    editor.insert(indentedTemplate);
+                    
+                    // Position cursor at first placeholder
+                    editor.moveCursorTo(
+                        cursor.row + template.cursor.row,
+                        cursor.column + indent.length + template.cursor.column
+                    );
+                }
+                editor.focus();
+            });
+        });
+
+        // Delete key
+        document.getElementById('delete-key').addEventListener('click', (e) => {
+            e.preventDefault();
+            handleKeyPress(e.target);
+            editor.remove('left');
+            editor.focus();
+        });
+
+        // Return key
+        document.getElementById('return-key').addEventListener('click', (e) => {
+            e.preventDefault();
+            handleKeyPress(e.target);
+            editor.insert('\n');
+            editor.focus();
+        });
+
+        // Shift key
+        document.getElementById('shift-key').addEventListener('click', (e) => {
+            e.preventDefault();
+            handleKeyPress(e.target);
+            shiftPressed = !shiftPressed;
+            e.target.classList.toggle('active');
+            updateKeyLabels();
+            editor.focus();
+        });
+
+        // Symbols toggle
+        symbolsToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleKeyPress(e.target);
+            symbolsMode = !symbolsMode;
+            e.target.classList.toggle('active');
+            symbolsSection.style.display = symbolsMode ? 'block' : 'none';
+            editor.focus();
+        });
+
+        // Update key labels for shift
+        function updateKeyLabels() {
+            document.querySelectorAll('.key[data-key]').forEach(key => {
+                const char = key.getAttribute('data-key');
+                if (char && char.match(/[a-z]/)) {
+                    key.textContent = shiftPressed ? char.toUpperCase() : char.toLowerCase();
+                }
+            });
+        }
+
+        // Prevent native keyboard on mobile
+        if ('ontouchstart' in window) {
+            // Disable Ace's mobile keyboard trigger
+            editor.renderer.setShowGutter(true);
+            editor.setOption("readOnly", true);
+            editor.textInput.getElement().setAttribute('inputmode', 'none');
+            
+            // Re-enable editing but prevent native keyboard
+            editor.setOption("readOnly", false);
+            editor.textInput.getElement().addEventListener('focus', (e) => {
+                e.target.blur();
+                setTimeout(() => editor.focus(), 10);
+            });
+        }
+
+        // Set initial editor height accounting for keyboard
+        editor.container.style.paddingBottom = '280px';
+        editor.container.classList.add('with-keyboard');
+        editor.resize();
+
+        // Focus editor
+        editor.focus();
+    </script>
+</body>
+</html>
