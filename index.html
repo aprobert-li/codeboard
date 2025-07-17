@@ -280,14 +280,29 @@
                 editor.insert(dataPair);
                 if (dataPair.length === 2) editor.navigateLeft();
             } else if (dataTemplate) {
+                const isMobile = 'ontouchstart' in window;
+                if (isMobile) editor.setReadOnly(false);
+
                 const template = templates[dataTemplate];
                 if (template) {
                     const cursor = editor.getCursorPosition();
                     const indent = editor.session.getLine(cursor.row).match(/^\s*/)[0];
-                    const indentedTemplate = template.text.split('\n').map((line, i) => i === 0 ? line : indent + line).join('\n');
-                    editor.insert(indentedTemplate);
-                    editor.moveCursorTo(cursor.row + template.cursor.row, (template.cursor.row > 0 ? 0 : cursor.column) + indent.length + template.cursor.column);
-                }
+        
+                    const indentedTemplate = template.text.split('\n').map((line, i) => {
+                    return i === 0 ? line : indent + line;
+                }).join('\n');
+        
+                editor.insert(indentedTemplate);
+        
+                // This calculation correctly handles both single and multi-line templates
+                const newRow = cursor.row + template.cursor.row;
+                const newCol = (template.cursor.row > 0 ? 0 : cursor.column) + indent.length + template.cursor.column;
+
+                editor.moveCursorTo(newRow, newCol);
+    }
+
+    // Restore the read-only state for mobile immediately after.
+    if (isMobile) editor.setReadOnly(true);
             } else if (keyId === 'delete-key') {
                 editor.remove('left');
             } else if (keyId === 'return-key') {
