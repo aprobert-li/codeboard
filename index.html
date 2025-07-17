@@ -10,214 +10,57 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.js"></script>
     
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* Ace Editor Container */
-        #editor {
-            flex: 1;
-            font-size: 14px;
-            width: 100%;
-        }
-
-        /* Keyboard Container */
-        #keyboard {
-            background: #2d2d30;
-            padding: 8px 4px;
-            border-top: 2px solid #007acc;
-            user-select: none;
-            -webkit-user-select: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
-            transform: translateY(0);
-            transition: transform 0.3s ease, bottom 0.3s ease;
-        }
-
-        #keyboard.hidden {
-            transform: translateY(100%);
-        }
-
-        /* Keyboard Rows */
-        .keyboard-row {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 4px;
-            gap: 3px;
-            flex-wrap: wrap;
-        }
-
-        /* Base Key Style */
-        .key {
-            background: #3e3e42;
-            border: 1px solid #555;
-            border-radius: 6px;
-            padding: 8px 12px;
-            color: #cccccc;
-            cursor: pointer;
-            font-size: 16px;
-            min-width: 28px;
-            height: 42px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.1s, transform 0.1s;
-            flex: 1;
-            max-width: 40px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* Key press visual feedback */
-        .key.pressed {
-            transform: scale(0.95);
-            background-color: #094771;
-        }
-
-        .key:hover {
-            background: #4e4e52;
-        }
-
-        /* Coding keys (top row) */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1e1e1e; color: #d4d4d4; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #editor { flex: 1; font-size: 14px; width: 100%; }
+        #keyboard { background: #2d2d30; padding: 8px 4px; border-top: 2px solid #007acc; user-select: none; -webkit-user-select: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3); transform: translateY(0); transition: transform 0.3s ease, bottom 0.3s ease; }
+        #keyboard.hidden { transform: translateY(100%); }
+        .keyboard-row { display: flex; justify-content: center; margin-bottom: 4px; gap: 3px; }
+        .key { background: #3e3e42; border: 1px solid #555; border-radius: 6px; padding: 8px 12px; color: #cccccc; cursor: pointer; font-size: 16px; min-width: 28px; height: 42px; display: flex; align-items: center; justify-content: center; transition: background-color 0.1s, transform 0.1s; flex: 1; max-width: 40px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .key.pressed { transform: scale(0.95); background-color: #094771; }
+        .key:hover { background: #4e4e52; }
+        
         .key.coding {
-            flex: 1 1 auto;
+            flex: 1;
+            max-width: none;
+            padding: 8px 6px;
             background: #094771;
             border-color: #1177bb;
             color: #4fc3f7;
-            padding: 8px 6px;
             font-weight: 600;
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
+        .key.coding:hover { background: #0a5a8e; }
         
-        .key.coding:hover {
-            background: #0a5a8e;
-        }
-
-        /* Special keys */
-        .key.special {
-            background: #4b4b4f;
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        .key.space { flex: 4; max-width: 200px; }
+        .key.special { background: #4b4b4f; color: #ffffff; font-weight: 500; }
+        .key.space { flex: 2.5; max-width: 200px; }
         .key.shift, .key.delete { flex: 1.5; max-width: 60px; }
         .key.shift.active { background: #1177bb; color: white; }
         .key.return { background: #0e639c; color: white; flex: 1.5; max-width: 70px; }
         .key.symbols-toggle { background: #5a5a5f; min-width: 40px; }
         .key.symbols-toggle.active { background: #1177bb; }
-
-        /* Bracket pair keys */
-        .key[data-pair] { font-size: 18px; letter-spacing: 2px; padding: 8px 6px; }
-
-        /* Editor info bar */
-        #info-bar {
-            background: #2d2d30;
-            color: white;
-            padding: 8px 16px;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: relative;
-        }
-
-        .cursor-info { font-family: 'SF Mono', Monaco, monospace; font-size: 12px; }
-
-        /* Run button */
-        #run-button {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
+        
+        .key.run-key {
             background: #21b682;
             color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
+            flex: 1.5;
+            max-width: 80px;
         }
+        .key.run-key:hover { background: #1a9f6f; }
         
-        #run-button:hover {
-            background: #1a9f6f;
-        }
+        .key[data-pair] { font-size: 18px; letter-spacing: 2px; padding: 8px 6px; }
 
-        /* Console panel */
-        #console-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 200px;
-            background: #1e1e1e;
-            border-top: 2px solid #007acc;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-            z-index: 998;
-        }
-
-        #console-panel.open {
-            transform: translateY(0);
-        }
-
-        #console-header {
-            background: #2d2d30;
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #console-output {
-            height: calc(100% - 40px);
-            padding: 12px;
-            overflow-y: auto;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        /* Adjust keyboard position when console is open */
-        #keyboard.with-console {
-            bottom: 200px;
-        }
-
-        /* Prevent scrolling when keyboard is open on mobile */
-        body.keyboard-open {
-            position: fixed;
-            width: 100%;
-        }
+        #console-panel { position: fixed; bottom: 0; left: 0; right: 0; height: 200px; background: #1e1e1e; border-top: 2px solid #007acc; transform: translateY(100%); transition: transform 0.3s ease; z-index: 998; }
+        #console-panel.open { transform: translateY(0); }
+        #console-header { background: #2d2d30; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; }
+        #console-output { height: calc(100% - 40px); padding: 12px; overflow-y: auto; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+        #keyboard.with-console { bottom: 200px; }
+        body.keyboard-open { position: fixed; width: 100%; }
     </style>
 </head>
 <body>
-    <div id="info-bar">
-        <span class="cursor-info" id="cursor-info">Ln 1, Col 1</span>
-        <button id="run-button">▶ Run</button>
-    </div>
-    
     <div id="editor"></div>
-    
     <div id="console-panel">
         <div id="console-header">
             <span>Console Output</span>
@@ -230,17 +73,12 @@
     </div>
     
     <div id="keyboard" class="visible">
-        <!-- Coding shortcuts row -->
         <div class="keyboard-row">
             <div class="key coding" data-template="func">func</div><div class="key coding" data-template="loop">for</div><div class="key coding" data-template="if">if</div><div class="key coding" data-template="arrow">=></div><div class="key coding" data-template="log">log</div><div class="key coding" data-template="const">const</div><div class="key coding" data-template="let">let</div><div class="key coding" data-template="try">try</div>
         </div>
-
-        <!-- Numbers row -->
         <div class="keyboard-row">
             <div class="key" data-key="1">1</div><div class="key" data-key="2">2</div><div class="key" data-key="3">3</div><div class="key" data-key="4">4</div><div class="key" data-key="5">5</div><div class="key" data-key="6">6</div><div class="key" data-key="7">7</div><div class="key" data-key="8">8</div><div class="key" data-key="9">9</div><div class="key" data-key="0">0</div>
         </div>
-
-        <!-- QWERTY rows -->
         <div class="keyboard-row">
             <div class="key" data-key="q">q</div><div class="key" data-key="w">w</div><div class="key" data-key="e">e</div><div class="key" data-key="r">r</div><div class="key" data-key="t">t</div><div class="key" data-key="y">y</div><div class="key" data-key="u">u</div><div class="key" data-key="i">i</div><div class="key" data-key="o">o</div><div class="key" data-key="p">p</div>
         </div>
@@ -251,7 +89,7 @@
             <div class="key special shift" id="shift-key">⇧</div><div class="key" data-key="z">z</div><div class="key" data-key="x">x</div><div class="key" data-key="c">c</div><div class="key" data-key="v">v</div><div class="key" data-key="b">b</div><div class="key" data-key="n">n</div><div class="key" data-key="m">m</div><div class="key special delete" id="delete-key">⌫</div>
         </div>
         <div class="keyboard-row">
-            <div class="key special symbols-toggle" id="symbols-toggle">{}</div><div class="key" data-key=",">,</div><div class="key special space" data-key=" ">space</div><div class="key" data-key=".">.</div><div class="key special return" id="return-key">↵</div>
+            <div class="key special symbols-toggle" id="symbols-toggle">{}</div><div class="key" data-key=",">,</div><div class="key special space" data-key=" ">space</div><div class="key" data-key=".">.</div><div class="key special return" id="return-key">↵</div><div class="key special run-key" id="run-key">▶ Run</div>
         </div>
         <div id="symbols-section" style="display: none;">
             <div class="keyboard-row"><div class="key" data-pair="()">()</div><div class="key" data-pair="[]">[]</div><div class="key" data-pair="{}">{}</div><div class="key" data-pair="<>"><></div><div class="key" data-pair='""'>""</div><div class="key" data-pair="''">''</div><div class="key" data-pair="``">``</div></div>
@@ -277,10 +115,8 @@
         };
 
         const keyboard = document.getElementById('keyboard');
-        const cursorInfo = document.getElementById('cursor-info');
         const symbolsToggle = document.getElementById('symbols-toggle');
         const symbolsSection = document.getElementById('symbols-section');
-        const runButton = document.getElementById('run-button');
         const consolePanel = document.getElementById('console-panel');
         const consoleOutput = document.getElementById('console-output');
         const clearConsole = document.getElementById('clear-console');
@@ -291,12 +127,10 @@
         function addConsoleEntry(type, ...args) { const entry = document.createElement('div'); entry.className = `console-entry ${type}`; const output = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' '); entry.appendChild(document.createTextNode(output)); consoleOutput.appendChild(entry); consoleOutput.scrollTop = consoleOutput.scrollHeight; }
         function createCustomConsole() { return { log: (...args) => addConsoleEntry('log', ...args), error: (...args) => addConsoleEntry('error', ...args), warn: (...args) => addConsoleEntry('warn', ...args), info: (...args) => addConsoleEntry('info', ...args) }; }
         function runCode() { consoleOutput.innerHTML = ''; if (!consoleOpen) toggleConsole(); const code = editor.getValue(); const customConsole = createCustomConsole(); try { const func = new Function('console', code); const result = func(customConsole); if (result !== undefined) addConsoleEntry('result', 'Return value:', result); } catch (error) { addConsoleEntry('error', error.toString()); } }
-        runButton.addEventListener('click', runCode);
         editor.commands.addCommand({ name: 'runCode', bindKey: {win: 'Ctrl-Enter', mac: 'Command-Enter'}, exec: runCode });
         function toggleConsole() { consoleOpen = !consoleOpen; consolePanel.classList.toggle('open'); keyboard.classList.toggle('with-console'); document.body.classList.toggle('console-open'); updateEditorLayout(); }
         closeConsole.addEventListener('click', () => { if (consoleOpen) toggleConsole(); });
         clearConsole.addEventListener('click', (e) => { e.stopPropagation(); consoleOutput.innerHTML = ''; });
-        editor.on('changeSelection', () => { const cursor = editor.getCursorPosition(); cursorInfo.textContent = `Ln ${cursor.row + 1}, Col ${cursor.column + 1}`; });
 
         function updateEditorLayout() {
             let padding = 0;
@@ -342,6 +176,8 @@
                 editor.remove('left');
             } else if (keyId === 'return-key') {
                 editor.insert('\n');
+            } else if (keyId === 'run-key') {
+                runCode();
             } else if (keyId === 'shift-key') {
                 shiftPressed = !shiftPressed;
                 key.classList.toggle('active', shiftPressed);
