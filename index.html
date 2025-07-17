@@ -83,7 +83,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Key press visual feedback */
         .key.pressed {
             transform: scale(0.95);
             background-color: #094771;
@@ -93,7 +92,6 @@
             background: #4e4e52;
         }
 
-        /* Coding keys (top row) */
         .key.coding {
             background: #094771;
             border-color: #1177bb;
@@ -105,7 +103,6 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        /* Special keys */
         .key.special {
             background: #4b4b4f;
             color: #ffffff;
@@ -118,11 +115,8 @@
         .key.return { background: #0e639c; color: white; flex: 1.5; max-width: 70px; }
         .key.symbols-toggle { background: #5a5a5f; min-width: 40px; }
         .key.symbols-toggle.active { background: #1177bb; }
-
-        /* Bracket pair keys */
         .key[data-pair] { font-size: 18px; letter-spacing: 2px; padding: 8px 6px; }
 
-        /* Info Bar */
         #info-bar {
             background: #2d2d30;
             color: white;
@@ -135,24 +129,8 @@
         }
 
         .cursor-info { font-family: 'SF Mono', Monaco, monospace; font-size: 12px; }
+        #run-button { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: #21b682; color: white; border: none; border-radius: 4px; padding: 6px 16px; font-size: 14px; font-weight: 500; cursor: pointer; }
 
-        /* Run button */
-        #run-button {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: #21b682;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        /* Console panel */
         #console-panel {
             position: fixed;
             bottom: 0;
@@ -166,37 +144,11 @@
             z-index: 998;
         }
 
-        #console-panel.open {
-            transform: translateY(0);
-        }
-
-        #console-header {
-            background: #2d2d30;
-            padding: 8px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #console-output {
-            height: calc(100% - 40px);
-            padding: 12px;
-            overflow-y: auto;
-            font-family: 'SF Mono', Monaco, monospace;
-            font-size: 13px;
-            line-height: 1.5;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        #keyboard.with-console {
-            bottom: 200px;
-        }
-
-        body.keyboard-open {
-            position: fixed;
-            width: 100%;
-        }
+        #console-panel.open { transform: translateY(0); }
+        #console-header { background: #2d2d30; padding: 8px 16px; display: flex; justify-content: space-between; align-items: center; }
+        #console-output { height: calc(100% - 40px); padding: 12px; overflow-y: auto; font-family: 'SF Mono', Monaco, monospace; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+        #keyboard.with-console { bottom: 200px; }
+        body.keyboard-open { position: fixed; width: 100%; }
     </style>
 </head>
 <body>
@@ -219,19 +171,9 @@
     </div>
     
     <div id="keyboard" class="visible">
-        <!-- Coding shortcuts row -->
         <div class="keyboard-row">
-            <div class="key coding" data-template="func">func</div>
-            <div class="key coding" data-template="loop">for</div>
-            <div class="key coding" data-template="if">if</div>
-            <div class="key coding" data-template="arrow">=></div>
-            <div class="key coding" data-template="log">log</div>
-            <div class="key coding" data-template="const">const</div>
-            <div class="key coding" data-template="let">let</div>
-            <div class="key coding" data-template="try">try</div>
+            <div class="key coding" data-template="func">func</div><div class="key coding" data-template="loop">for</div><div class="key coding" data-template="if">if</div><div class="key coding" data-template="arrow">=></div><div class="key coding" data-template="log">log</div><div class="key coding" data-template="const">const</div><div class="key coding" data-template="let">let</div><div class="key coding" data-template="try">try</div>
         </div>
-
-        <!-- QWERTY rows -->
         <div class="keyboard-row">
             <div class="key" data-key="q">q</div><div class="key" data-key="w">w</div><div class="key" data-key="e">e</div><div class="key" data-key="r">r</div><div class="key" data-key="t">t</div><div class="key" data-key="y">y</div><div class="key" data-key="u">u</div><div class="key" data-key="i">i</div><div class="key" data-key="o">o</div><div class="key" data-key="p">p</div>
         </div>
@@ -241,13 +183,9 @@
         <div class="keyboard-row">
             <div class="key special shift" id="shift-key">⇧</div><div class="key" data-key="z">z</div><div class="key" data-key="x">x</div><div class="key" data-key="c">c</div><div class="key" data-key="v">v</div><div class="key" data-key="b">b</div><div class="key" data-key="n">n</div><div class="key" data-key="m">m</div><div class="key special delete" id="delete-key">⌫</div>
         </div>
-
-        <!-- Bottom row -->
         <div class="keyboard-row">
             <div class="key special symbols-toggle" id="symbols-toggle">{}</div><div class="key" data-key=",">,</div><div class="key special space" data-key=" ">space</div><div class="key" data-key=".">.</div><div class="key special return" id="return-key">↵</div>
         </div>
-
-        <!-- Symbols rows (initially hidden) -->
         <div id="symbols-section" style="display: none;">
             <div class="keyboard-row"><div class="key" data-pair="()">()</div><div class="key" data-pair="[]">[]</div><div class="key" data-pair="{}">{}</div><div class="key" data-pair="<>"><></div><div class="key" data-pair='""'>""</div><div class="key" data-pair="''">''</div><div class="key" data-pair="``">``</div></div>
             <div class="keyboard-row"><div class="key" data-key="!">!</div><div class="key" data-key="@">@</div><div class="key" data-key="#">#</div><div class="key" data-key="$">$</div><div class="key" data-key="%">%</div><div class="key" data-key="&">&</div><div class="key" data-key="*">*</div><div class="key" data-key="=">=</div><div class="key" data-key="+">+</div><div class="key" data-key="-">-</div><div class="key" data-key="/">/</div><div class="key" data-key="|">|</div></div>
@@ -255,7 +193,6 @@
     </div>
 
     <script>
-        // Initialize Ace Editor
         const editor = ace.edit("editor");
         editor.setTheme("ace/theme/cobalt");
         editor.session.setMode("ace/mode/javascript");
@@ -270,11 +207,6 @@
             showGutter: true
         });
         
-        // --- MOBILE OPTIMIZATION: Prevent Native Keyboard ---
-        // This is the most important setting for mobile.
-        // It tells the mobile OS not to show the native keyboard.
-        editor.setReadOnly(true);
-
         const templates = {
             func: { text: "function name(params) {\n    \n}", cursor: { row: 1, column: 4 } },
             loop: { text: "for (let i = 0; i < length; i++) {\n    \n}", cursor: { row: 1, column: 4 } },
@@ -286,7 +218,6 @@
             try: { text: "try {\n    \n} catch (error) {\n    \n}", cursor: { row: 1, column: 4 } }
         };
 
-        // UI Elements
         const keyboard = document.getElementById('keyboard');
         const cursorInfo = document.getElementById('cursor-info');
         const symbolsToggle = document.getElementById('symbols-toggle');
@@ -301,7 +232,7 @@
         let symbolsMode = false;
         let consoleOpen = false;
 
-        // --- Console and Run Code Logic ---
+        // --- Console and Run Code Logic (Unchanged) ---
         function addConsoleEntry(type, ...args) { const entry = document.createElement('div'); entry.className = `console-entry ${type}`; const output = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' '); entry.appendChild(document.createTextNode(output)); consoleOutput.appendChild(entry); consoleOutput.scrollTop = consoleOutput.scrollHeight; }
         function createCustomConsole() { return { log: (...args) => addConsoleEntry('log', ...args), error: (...args) => addConsoleEntry('error', ...args), warn: (...args) => addConsoleEntry('warn', ...args), info: (...args) => addConsoleEntry('info', ...args) }; }
         function runCode() { consoleOutput.innerHTML = ''; if (!consoleOpen) toggleConsole(); const code = editor.getValue(); const customConsole = createCustomConsole(); try { const func = new Function('console', code); const result = func(customConsole); if (result !== undefined) addConsoleEntry('result', 'Return value:', result); } catch (error) { addConsoleEntry('error', error.toString()); } }
@@ -313,7 +244,6 @@
         editor.on('changeSelection', () => { const cursor = editor.getCursorPosition(); cursorInfo.textContent = `Ln ${cursor.row + 1}, Col ${cursor.column + 1}`; });
         // --- End of Console Logic ---
 
-        // Central function to handle editor padding and resizing
         function updateEditorLayout() {
             let padding = 0;
             if (keyboard.classList.contains('visible')) {
@@ -326,19 +256,18 @@
             editor.resize();
         }
 
-        // --- MOBILE OPTIMIZATION: Use event delegation with 'touchstart' ---
-        keyboard.addEventListener('touchstart', e => {
-            e.preventDefault();
+        // --- Use Pointer Events for Universal Input (Touch + Mouse) ---
+        keyboard.addEventListener('pointerdown', e => {
+            e.preventDefault(); 
             const key = e.target.closest('.key');
             if (!key) return;
 
-            key.classList.add('pressed'); // Instant visual feedback
+            key.classList.add('pressed');
 
             const keyId = key.id;
             const dataKey = key.dataset.key;
             const dataPair = key.dataset.pair;
             const dataTemplate = key.dataset.template;
-
             if (dataKey) {
                 const char = dataKey;
                 editor.insert(shiftPressed && char.match(/[a-z]/) ? char.toUpperCase() : char);
@@ -373,18 +302,17 @@
                 symbolsSection.style.display = symbolsMode ? 'block' : 'none';
                 updateEditorLayout();
             }
-
             editor.focus();
-
-        }, { passive: false }); // `passive: false` is required for `preventDefault()`
-
-        keyboard.addEventListener('touchend', e => {
-            // Remove visual feedback when finger is lifted
-            const key = e.target.closest('.key');
-            if (key && key.classList.contains('pressed')) {
-                setTimeout(() => key.classList.remove('pressed'), 50);
-            }
         });
+
+        function releaseKey(e) {
+            const pressedKey = keyboard.querySelector('.key.pressed');
+            if (pressedKey) {
+                pressedKey.classList.remove('pressed');
+            }
+        }
+        keyboard.addEventListener('pointerup', releaseKey);
+        keyboard.addEventListener('pointerleave', releaseKey);
 
         function updateKeyLabels() {
             document.querySelectorAll('.key[data-key]').forEach(key => {
@@ -395,19 +323,19 @@
             });
         }
         
-        // --- MOBILE OPTIMIZATION: "Fake Focus" for tapping the editor ---
-        editor.container.addEventListener('touchstart', e => {
-            e.preventDefault();
-            // This trick allows the user to tap to place the cursor
-            // without triggering the native keyboard.
-            editor.setReadOnly(false); // Briefly allow focus
-            setTimeout(() => {
-                editor.setReadOnly(true); // Restore read-only state
-            }, 100);
-        }, { passive: false });
+        // --- Conditional Mobile-Only Logic ---
+        if ('ontouchstart' in window) {
+            editor.setReadOnly(true);
+            editor.container.addEventListener('pointerdown', e => {
+                e.preventDefault();
+                editor.setReadOnly(false);
+                setTimeout(() => {
+                    editor.setReadOnly(true);
+                }, 100);
+            }, { passive: false });
+        }
         
-
-        // Initial setup on page load
+        // Initial setup
         updateEditorLayout();
         editor.focus();
 
